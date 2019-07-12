@@ -93,7 +93,7 @@ func (this *StateMachine) ReceiveState() (int, interface{}) {
 func (this *StateMachine) Run() {
 	err := this.PreLoop()
 	if err != nil {
-		zlog.Errorf("PreLoop failed: %s.\n", err.Error())
+		zlog.Errorln("PreLoop failed: ", err.Error(), ".")
 
 		this.SendState(STATE_FAILED)
 		zlog.Traceln("STATE_FAILED sent.")
@@ -109,7 +109,7 @@ Loop:
 		case command := <-this.command:
 			switch command.Type {
 			case COMMAND_SHUT:
-				zlog.Tracef("%s received.\n", COMMANDS[command.Type])
+				zlog.Traceln(COMMANDS[command.Type], " received.")
 				break Loop
 			default:
 				ok := this.CommandHandle(command.Type, command.Value)
@@ -128,7 +128,7 @@ Loop:
 		}
 	}
 
-	zlog.Tracef("this.AfterLoop\n")
+	zlog.Traceln("this.AfterLoop.")
 	this.AfterLoop()
 
 	this.SendState(STATE_CLOSED)
@@ -141,7 +141,7 @@ func (this *StateMachine) Startup() (err error) {
 	go this.Run()
 
 	state, _ := this.ReceiveState()
-	zlog.Tracef("%s received.\n", STATES[state])
+	zlog.Traceln(STATES[state], " received.")
 	switch state {
 	case STATE_READY:
 		return
@@ -159,13 +159,13 @@ func (this *StateMachine) Shutdown() {
 	zlog.Traceln("COMMAND_SHUT sent.")
 
 	state, _ := this.ReceiveState()
-	zlog.Tracef("%s received.\n", STATES[state])
+	zlog.Traceln(STATES[state], " received.")
 	switch state {
 	case STATE_CLOSED:
 		zlog.Debugln("Closed.")
 		return
 	default:
-		zlog.Debugf("%s received.\n", STATES[state])
+		zlog.Debugln(STATES[state], " received.")
 		zlog.Warningln("Closed abnormally.")
 	}
 }
