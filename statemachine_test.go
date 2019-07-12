@@ -49,8 +49,8 @@ func (this *StateMachineWrapper) AfterLoop() {
 	zlog.Debugln("Shut down.")
 }
 
-func (this *StateMachineWrapper) CommandHandle(command *Message) bool {
-	zlog.Traceln("Command", command.Type, "received.")
+func (this *StateMachineWrapper) CommandHandle(command int, value interface{}) bool {
+	zlog.Traceln("Command", command, "received.")
 	return true
 }
 

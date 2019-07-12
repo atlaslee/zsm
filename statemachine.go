@@ -33,7 +33,7 @@ type StateMachineI interface {
 	PreLoop() error
 	Loop() bool
 	AfterLoop()
-	CommandHandle(*Message) bool
+	CommandHandle(command int, value interface{}) bool
 	Run()
 	Startup() error
 	Shutdown()
@@ -95,12 +95,12 @@ func (this *StateMachine) Run() {
 	if err != nil {
 		zlog.Errorf("PreLoop failed: %s.\n", err.Error())
 
-		this.state <- MessageNew(STATE_FAILED)
+		this.SendState(STATE_FAILED)
 		zlog.Traceln("STATE_FAILED sent.")
 		return
 	}
 
-	this.state <- MessageNew(STATE_READY)
+	this.SendState(STATE_READY)
 	zlog.Traceln("STATE_READY sent.")
 
 Loop:
@@ -112,7 +112,7 @@ Loop:
 				zlog.Tracef("%s received.\n", COMMANDS[command.Type])
 				break Loop
 			default:
-				ok := this.CommandHandle(command)
+				ok := this.CommandHandle(command.Type, command.Value)
 				if !ok {
 					zlog.Traceln("Loop stop.")
 					break Loop
@@ -131,7 +131,7 @@ Loop:
 	zlog.Tracef("this.AfterLoop\n")
 	this.AfterLoop()
 
-	this.state <- MessageNew(STATE_CLOSED)
+	this.SendState(STATE_CLOSED)
 	zlog.Traceln("STATE_CLOSED sent.")
 }
 
