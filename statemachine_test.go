@@ -49,6 +49,11 @@ func (this *StateMachineWrapper) AfterLoop() {
 	zlog.Debugln("Shut down.")
 }
 
+func (this *StateMachineWrapper) CommandHandle(command int) bool {
+	zlog.Traceln("Command", command, "received.")
+	return true
+}
+
 func StateMachineWrapperNew() (wrapper *StateMachineWrapper) {
 	wrapper = new(StateMachineWrapper)
 	wrapper.Init(wrapper)
@@ -58,6 +63,7 @@ func StateMachineWrapperNew() (wrapper *StateMachineWrapper) {
 func TestStateMachine(t *testing.T) {
 	statemachine := StateMachineWrapperNew()
 	statemachine.Startup()
+	statemachine.In(2)
 	<-time.After(2 * time.Second)
 	statemachine.Shutdown()
 }
