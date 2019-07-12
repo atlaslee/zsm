@@ -22,48 +22,15 @@ DEALINGS IN THE SOFTWARE.
 
 package zsm
 
-import (
-	"github.com/atlaslee/zlog"
-	"testing"
-	"time"
-)
-
-type StateMachineWrapper struct {
-	StateMachine
-	times int
+type Message struct {
+	Type  int
+	Value interface{}
 }
 
-func (this *StateMachineWrapper) PreLoop() error {
-	zlog.Debugln("Starting up.")
-	return nil
+func MessageNew(t int) *Message {
+	return &Message{Type: t}
 }
 
-func (this *StateMachineWrapper) Loop() bool {
-	this.times++
-	<-time.After(10 * time.Millisecond)
-	return true
-}
-
-func (this *StateMachineWrapper) AfterLoop() {
-	zlog.Traceln("Runs", this.times, "times totally.")
-	zlog.Debugln("Shut down.")
-}
-
-func (this *StateMachineWrapper) CommandHandle(command *Message) bool {
-	zlog.Traceln("Command", command.Type, "received.")
-	return true
-}
-
-func StateMachineWrapperNew() (wrapper *StateMachineWrapper) {
-	wrapper = new(StateMachineWrapper)
-	wrapper.Init(wrapper)
-	return
-}
-
-func TestStateMachine(t *testing.T) {
-	statemachine := StateMachineWrapperNew()
-	statemachine.Startup()
-	statemachine.SendCommand(2)
-	<-time.After(2 * time.Second)
-	statemachine.Shutdown()
+func MessageNew2(t int, value interface{}) *Message {
+	return &Message{t, value}
 }
