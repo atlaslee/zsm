@@ -33,7 +33,7 @@ type StateMachineI interface {
 	PreLoop() error
 	Loop() bool
 	AfterLoop()
-	CommandHandle(command int, value interface{}) bool
+	CommandHandle(command int, from, data interface{}) bool
 	Run()
 	Startup() error
 	Shutdown()
@@ -60,7 +60,7 @@ var ERR_STARTUP_FAILED = errors.New("Startup failed.")
 
 func (this *StateMachine) Init(statemachine StateMachineI) {
 	this.StateMachineI = statemachine
-	this.command = make(chan *Message, 1)
+	this.command = make(chan *Message, 5)
 	this.state = make(chan *Message, 1)
 }
 
@@ -68,13 +68,17 @@ func (this *StateMachine) SendCommand(command int) {
 	this.SendCommand2(command, nil)
 }
 
-func (this *StateMachine) SendCommand2(command int, value interface{}) {
-	this.command <- MessageNew2(command, value)
+func (this *StateMachine) SendCommand2(command int, from interface{}) {
+	this.command <- MessageNew2(command, from)
 }
 
-func (this *StateMachine) ReceiveCommand() (int, interface{}) {
+func (this *StateMachine) SendCommand3(command int, from interface{}, data interface{}) {
+	this.command <- MessageNew3(command, from, data)
+}
+
+func (this *StateMachine) ReceiveCommand() (int, interface{}, interface{}) {
 	command := <-this.command
-	return command.Type, command.Value
+	return command.Type, command.From, command.Data
 }
 
 func (this *StateMachine) SendState(state int) {
@@ -87,13 +91,13 @@ func (this *StateMachine) SendState2(state int, value interface{}) {
 
 func (this *StateMachine) ReceiveState() (int, interface{}) {
 	state := <-this.state
-	return state.Type, state.Value
+	return state.Type, state.From
 }
 
 func (this *StateMachine) Run() {
 	err := this.PreLoop()
 	if err != nil {
-		zlog.Errorln("PreLoop failed: ", err.Error(), ".")
+		zlog.Errorln("PreLoop failed:", err.Error(), ".")
 
 		this.SendState(STATE_FAILED)
 		zlog.Traceln("STATE_FAILED sent.")
@@ -109,10 +113,10 @@ Loop:
 		case command := <-this.command:
 			switch command.Type {
 			case COMMAND_SHUT:
-				zlog.Traceln(COMMANDS[command.Type], " received.")
+				zlog.Traceln(COMMANDS[command.Type], "received.")
 				break Loop
 			default:
-				ok := this.CommandHandle(command.Type, command.Value)
+				ok := this.CommandHandle(command.Type, command.From, command.Data)
 				if !ok {
 					zlog.Traceln("Loop stop.")
 					break Loop
@@ -124,7 +128,7 @@ Loop:
 				zlog.Traceln("Loop stop.")
 				break Loop
 			}
-			<-time.After(time.Millisecond)
+			time.Sleep(time.Millisecond)
 		}
 	}
 
@@ -141,7 +145,7 @@ func (this *StateMachine) Startup() (err error) {
 	go this.Run()
 
 	state, _ := this.ReceiveState()
-	zlog.Traceln(STATES[state], " received.")
+	zlog.Traceln(STATES[state], "received.")
 	switch state {
 	case STATE_READY:
 		return
@@ -159,13 +163,13 @@ func (this *StateMachine) Shutdown() {
 	zlog.Traceln("COMMAND_SHUT sent.")
 
 	state, _ := this.ReceiveState()
-	zlog.Traceln(STATES[state], " received.")
+	zlog.Traceln(STATES[state], "received.")
 	switch state {
 	case STATE_CLOSED:
 		zlog.Debugln("Closed.")
 		return
 	default:
-		zlog.Debugln(STATES[state], " received.")
+		zlog.Debugln(STATES[state], "received.")
 		zlog.Warningln("Closed abnormally.")
 	}
 }

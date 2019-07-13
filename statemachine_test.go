@@ -40,7 +40,7 @@ func (this *StateMachineWrapper) PreLoop() error {
 
 func (this *StateMachineWrapper) Loop() bool {
 	this.times++
-	<-time.After(10 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	return true
 }
 
@@ -49,8 +49,8 @@ func (this *StateMachineWrapper) AfterLoop() {
 	zlog.Debugln("Shut down.")
 }
 
-func (this *StateMachineWrapper) CommandHandle(command int, value interface{}) bool {
-	zlog.Traceln("Command", command, "received.")
+func (this *StateMachineWrapper) CommandHandle(command int, from, data interface{}) bool {
+	zlog.Traceln("Command", command, from, data, "received.")
 	return true
 }
 
@@ -64,6 +64,6 @@ func TestStateMachine(t *testing.T) {
 	statemachine := StateMachineWrapperNew()
 	statemachine.Startup()
 	statemachine.SendCommand(2)
-	<-time.After(2 * time.Second)
+	time.Sleep(2 * time.Second)
 	statemachine.Shutdown()
 }

@@ -23,14 +23,19 @@ DEALINGS IN THE SOFTWARE.
 package zsm
 
 type Message struct {
-	Type  int
-	Value interface{}
+	Type int
+	From interface{}
+	Data interface{}
 }
 
 func MessageNew(t int) *Message {
 	return &Message{Type: t}
 }
 
-func MessageNew2(t int, value interface{}) *Message {
-	return &Message{t, value}
+func MessageNew2(t int, from interface{}) *Message {
+	return &Message{Type: t, From: from}
+}
+
+func MessageNew3(t int, from, data interface{}) *Message {
+	return &Message{Type: t, From: from, Data: data}
 }
