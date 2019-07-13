@@ -40,7 +40,6 @@ func (this *StateMachineWrapper) PreLoop() error {
 
 func (this *StateMachineWrapper) Loop() bool {
 	this.times++
-	time.Sleep(10 * time.Millisecond)
 	return true
 }
 

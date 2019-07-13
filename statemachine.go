@@ -107,6 +107,7 @@ func (this *StateMachine) Run() {
 	this.SendState(STATE_READY)
 	zlog.Traceln("STATE_READY sent.")
 
+	tick := time.Tick(10 * time.Millisecond)
 Loop:
 	for {
 		select {
@@ -122,13 +123,12 @@ Loop:
 					break Loop
 				}
 			}
-		default:
+		case <-tick:
 			ok := this.Loop()
 			if !ok {
 				zlog.Traceln("Loop stop.")
 				break Loop
 			}
-			time.Sleep(time.Millisecond)
 		}
 	}
 
@@ -151,7 +151,6 @@ func (this *StateMachine) Startup() (err error) {
 		return
 	default:
 		zlog.Errorln("Failed to start.")
-
 		return errors.New(fmt.Sprintf("Unexpected state %s received.", STATES[state]))
 	}
 }
