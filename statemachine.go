@@ -68,12 +68,9 @@ func (this *StateMachine) SendCommand(command int) {
 	this.SendCommand2(command, nil)
 }
 
-func (this *StateMachine) SendCommand2(command int, from interface{}) {
-	this.command <- MessageNew2(command, from)
-}
-
-func (this *StateMachine) SendCommand3(command int, from interface{}, data interface{}) {
-	this.command <- MessageNew3(command, from, data)
+func (this *StateMachine) SendCommand2(command int, data interface{}) {
+	zlog.Traceln("SendCommand2", command, this, data)
+	this.command <- MessageNew3(command, this, data)
 }
 
 func (this *StateMachine) ReceiveCommand() (int, interface{}, interface{}) {
@@ -85,8 +82,8 @@ func (this *StateMachine) SendState(state int) {
 	this.SendState2(state, nil)
 }
 
-func (this *StateMachine) SendState2(state int, value interface{}) {
-	this.state <- MessageNew2(state, value)
+func (this *StateMachine) SendState2(state int, data interface{}) {
+	this.state <- MessageNew3(state, this, data)
 }
 
 func (this *StateMachine) ReceiveState() (int, interface{}) {
