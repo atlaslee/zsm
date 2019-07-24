@@ -25,6 +25,7 @@ package zsm
 import (
 	"errors"
 	"github.com/atlaslee/zlog"
+	"time"
 )
 
 type StateMachineI interface {
@@ -113,6 +114,7 @@ Loop:
 		}
 
 		if err != nil {
+			this.state = STATE_FAILED
 			zlog.Errorln("LOOP:", this, "failed:", err)
 		}
 
@@ -122,6 +124,7 @@ Loop:
 	this.state = STATE_STOPPING
 	zlog.Traceln("LOOP:", this, "stopping")
 	this.AfterLoop()
+	this.state = STATE_STOPPED
 }
 
 func (this *StateMachine) Startup() {
@@ -133,4 +136,92 @@ func (this *StateMachine) Shutdown() {
 	zlog.Debugln("SM:", this, "is shutting down.")
 
 	this.SendMessage2(COMMAND_SHUTDOWN, this)
+}
+
+func WaitForStartupAll(sms []*StateMachine) (ok bool) {
+	for range time.Tick(10 * time.Millisecond) {
+		ok = false
+		for _, sm := range sms {
+			if sm.state == STATE_INITIALING {
+				ok = true
+				break
+			}
+		}
+
+		if !ok {
+			ok = true
+			break
+		}
+	}
+	return
+}
+
+func WaitForStartupAllTimeout(sms []*StateMachine, dur time.Duration) (ok bool) {
+	tick := time.Tick(10 * time.Millisecond)
+Loop:
+	for {
+		select {
+		case <-tick:
+			ok = false
+			for _, sm := range sms {
+				if sm.state == STATE_INITIALING {
+					ok = true
+					break
+				}
+			}
+
+			if !ok {
+				ok = true
+				break Loop
+			}
+		case <-time.After(dur):
+			ok = false
+			break Loop
+		}
+	}
+	return
+}
+
+func WaitForShutdownAll(sms []*StateMachine) (ok bool) {
+	for range time.Tick(10 * time.Millisecond) {
+		ok = false
+		for _, sm := range sms {
+			if sm.state == STATE_STOPPED {
+				ok = true
+				break
+			}
+		}
+
+		if !ok {
+			ok = true
+			break
+		}
+	}
+	return
+}
+
+func WaitForShutdownAllTimeout(sms []*StateMachine, dur time.Duration) (ok bool) {
+	tick := time.Tick(10 * time.Millisecond)
+Loop:
+	for {
+		select {
+		case <-tick:
+			ok = false
+			for _, sm := range sms {
+				if sm.state == STATE_STOPPED {
+					ok = true
+					break
+				}
+			}
+
+			if !ok {
+				ok = true
+				break Loop
+			}
+		case <-time.After(dur):
+			ok = false
+			break Loop
+		}
+	}
+	return
 }
