@@ -138,6 +138,30 @@ func (this *StateMachine) Shutdown() {
 	this.SendMessage2(COMMAND_SHUTDOWN, this)
 }
 
+func WaitForStartup(sm *StateMachine) bool {
+	for range time.Tick(10 * time.Millisecond) {
+		if sm.state != STATE_INITIALING {
+			return true
+		}
+	}
+	return false
+}
+
+func WaitForStartupTimeout(sm *StateMachine, dur time.Duration) bool {
+	tick := time.Tick(10 * time.Millisecond)
+	for {
+		select {
+		case <-tick:
+			if sm.state != STATE_INITIALING {
+				return true
+			}
+		case <-time.After(dur):
+			return false
+		}
+	}
+	return false
+}
+
 func WaitForStartupAll(sms []*StateMachine) (ok bool) {
 	for range time.Tick(10 * time.Millisecond) {
 		ok = false
@@ -180,6 +204,30 @@ Loop:
 		}
 	}
 	return
+}
+
+func WaitForShutdown(sm *StateMachine) bool {
+	for range time.Tick(10 * time.Millisecond) {
+		if sm.state == STATE_STOPPED {
+			return true
+		}
+	}
+	return false
+}
+
+func WaitForShutdownTimeout(sm *StateMachine, dur time.Duration) bool {
+	tick := time.Tick(10 * time.Millisecond)
+	for {
+		select {
+		case <-tick:
+			if sm.state == STATE_STOPPED {
+				return true
+			}
+		case <-time.After(dur):
+			return false
+		}
+	}
+	return false
 }
 
 func WaitForShutdownAll(sms []*StateMachine) (ok bool) {
