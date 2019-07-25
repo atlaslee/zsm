@@ -36,6 +36,7 @@ type StateMachineI interface {
 	Run()
 	Startup()
 	Shutdown()
+	State() int
 }
 
 type StateMachine struct {
@@ -138,21 +139,21 @@ func (this *StateMachine) Shutdown() {
 	this.SendMessage2(COMMAND_SHUTDOWN, this)
 }
 
-func WaitForStartup(sm *StateMachine) bool {
+func WaitForStartup(sm StateMachineI) bool {
 	for range time.Tick(10 * time.Millisecond) {
-		if sm.state != STATE_INITIALING {
+		if sm.State() != STATE_INITIALING {
 			return true
 		}
 	}
 	return false
 }
 
-func WaitForStartupTimeout(sm *StateMachine, dur time.Duration) bool {
+func WaitForStartupTimeout(sm StateMachineI, dur time.Duration) bool {
 	tick := time.Tick(10 * time.Millisecond)
 	for {
 		select {
 		case <-tick:
-			if sm.state != STATE_INITIALING {
+			if sm.State() != STATE_INITIALING {
 				return true
 			}
 		case <-time.After(dur):
@@ -162,11 +163,11 @@ func WaitForStartupTimeout(sm *StateMachine, dur time.Duration) bool {
 	return false
 }
 
-func WaitForStartupAll(sms []*StateMachine) (ok bool) {
+func WaitForStartupAll(sms []StateMachineI) (ok bool) {
 	for range time.Tick(10 * time.Millisecond) {
 		ok = false
 		for _, sm := range sms {
-			if sm.state == STATE_INITIALING {
+			if sm.State() == STATE_INITIALING {
 				ok = true
 				break
 			}
@@ -180,7 +181,7 @@ func WaitForStartupAll(sms []*StateMachine) (ok bool) {
 	return
 }
 
-func WaitForStartupAllTimeout(sms []*StateMachine, dur time.Duration) (ok bool) {
+func WaitForStartupAllTimeout(sms []StateMachineI, dur time.Duration) (ok bool) {
 	tick := time.Tick(10 * time.Millisecond)
 Loop:
 	for {
@@ -188,7 +189,7 @@ Loop:
 		case <-tick:
 			ok = false
 			for _, sm := range sms {
-				if sm.state == STATE_INITIALING {
+				if sm.State() == STATE_INITIALING {
 					ok = true
 					break
 				}
@@ -206,21 +207,21 @@ Loop:
 	return
 }
 
-func WaitForShutdown(sm *StateMachine) bool {
+func WaitForShutdown(sm StateMachineI) bool {
 	for range time.Tick(10 * time.Millisecond) {
-		if sm.state == STATE_STOPPED {
+		if sm.State() == STATE_STOPPED {
 			return true
 		}
 	}
 	return false
 }
 
-func WaitForShutdownTimeout(sm *StateMachine, dur time.Duration) bool {
+func WaitForShutdownTimeout(sm StateMachineI, dur time.Duration) bool {
 	tick := time.Tick(10 * time.Millisecond)
 	for {
 		select {
 		case <-tick:
-			if sm.state == STATE_STOPPED {
+			if sm.State() == STATE_STOPPED {
 				return true
 			}
 		case <-time.After(dur):
@@ -230,11 +231,11 @@ func WaitForShutdownTimeout(sm *StateMachine, dur time.Duration) bool {
 	return false
 }
 
-func WaitForShutdownAll(sms []*StateMachine) (ok bool) {
+func WaitForShutdownAll(sms []StateMachineI) (ok bool) {
 	for range time.Tick(10 * time.Millisecond) {
 		ok = false
 		for _, sm := range sms {
-			if sm.state == STATE_STOPPED {
+			if sm.State() == STATE_STOPPED {
 				ok = true
 				break
 			}
@@ -248,7 +249,7 @@ func WaitForShutdownAll(sms []*StateMachine) (ok bool) {
 	return
 }
 
-func WaitForShutdownAllTimeout(sms []*StateMachine, dur time.Duration) (ok bool) {
+func WaitForShutdownAllTimeout(sms []StateMachineI, dur time.Duration) (ok bool) {
 	tick := time.Tick(10 * time.Millisecond)
 Loop:
 	for {
@@ -256,7 +257,7 @@ Loop:
 		case <-tick:
 			ok = false
 			for _, sm := range sms {
-				if sm.state == STATE_STOPPED {
+				if sm.State() == STATE_STOPPED {
 					ok = true
 					break
 				}
