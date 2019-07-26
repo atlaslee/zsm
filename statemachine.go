@@ -78,7 +78,7 @@ func (this *StateMachine) SendMessage3(t int, from, data interface{}) {
 }
 
 func (this *StateMachine) Init(Statemachine StateMachineI) {
-	zlog.Debugln("SM:", this, "is initialing")
+	zlog.Debugln("SM:", this, "initialing")
 	this.StateMachineI = Statemachine
 	this.messages = make(chan *Message, 2)
 }
@@ -87,12 +87,12 @@ func (this *StateMachine) Run() {
 	err := this.PreLoop()
 	if err != nil {
 		this.state = STATE_FAILED
-		zlog.Errorln("SM:", this, "is failed:", err.Error())
+		zlog.Errorln("SM:", this, "failed:", err.Error())
 		this.state = STATE_STOPPED
 		return
 	}
 	this.state = STATE_RUNNING
-	zlog.Debugln("SM:", this, "is running")
+	zlog.Debugln("SM:", this, "running")
 
 	var ok bool
 Loop:
@@ -126,15 +126,16 @@ Loop:
 	zlog.Traceln("LOOP:", this, "stopping")
 	this.AfterLoop()
 	this.state = STATE_STOPPED
+	zlog.Debugln("LOOP:", this, "stopped")
 }
 
 func (this *StateMachine) Startup() {
-	zlog.Debugln("SM:", this, "is starting up.")
+	zlog.Debugln("SM:", this, "starting")
 	go this.Run()
 }
 
 func (this *StateMachine) Shutdown() {
-	zlog.Debugln("SM:", this, "is shutting down.")
+	zlog.Debugln("SM:", this, "stopping")
 
 	this.SendMessage2(COMMAND_SHUTDOWN, this)
 }
