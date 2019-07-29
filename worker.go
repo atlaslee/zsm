@@ -151,13 +151,14 @@ func WaitForStartup(sm WorkerI) bool {
 
 func WaitForStartupTimeout(sm WorkerI, dur time.Duration) bool {
 	tick := time.Tick(10 * time.Millisecond)
+	timeout := time.Tick(dur)
 	for {
 		select {
 		case <-tick:
 			if sm.State() != STA_INITIALING {
 				return true
 			}
-		case <-time.After(dur):
+		case <-timeout:
 			return false
 		}
 	}
@@ -184,6 +185,7 @@ func WaitForStartupAll(sms []WorkerI) (ok bool) {
 
 func WaitForStartupAllTimeout(sms []WorkerI, dur time.Duration) (ok bool) {
 	tick := time.Tick(10 * time.Millisecond)
+	timeout := time.Tick(dur)
 Loop:
 	for {
 		select {
@@ -200,7 +202,7 @@ Loop:
 				ok = true
 				break Loop
 			}
-		case <-time.After(dur):
+		case <-timeout:
 			ok = false
 			break Loop
 		}
@@ -219,13 +221,14 @@ func WaitForShutdown(sm WorkerI) bool {
 
 func WaitForShutdownTimeout(sm WorkerI, dur time.Duration) bool {
 	tick := time.Tick(10 * time.Millisecond)
+	timeout := time.Tick(dur)
 	for {
 		select {
 		case <-tick:
 			if sm.State() == STA_STOPPED {
 				return true
 			}
-		case <-time.After(dur):
+		case <-timeout:
 			return false
 		}
 	}
@@ -252,6 +255,7 @@ func WaitForShutdownAll(sms []WorkerI) (ok bool) {
 
 func WaitForShutdownAllTimeout(sms []WorkerI, dur time.Duration) (ok bool) {
 	tick := time.Tick(10 * time.Millisecond)
+	timeout := time.Tick(dur)
 Loop:
 	for {
 		select {
@@ -268,7 +272,7 @@ Loop:
 				ok = true
 				break Loop
 			}
-		case <-time.After(dur):
+		case <-timeout:
 			ok = false
 			break Loop
 		}
